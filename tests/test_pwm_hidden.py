@@ -113,6 +113,6 @@ def test_pwm_advanced_runner():
     
     runner.test(
         hdl_toplevel="pwm_module", 
-        test_module="test_pwm_advanced_hidden", 
+        test_module="test_pwm_hidden", 
         waves=True 
     )
