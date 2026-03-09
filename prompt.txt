@@ -1,0 +1,13 @@
+Create a pulse width modulation generator with the following features: 
+	• 16-bit PWM resolution 
+	• Configurable PWM frequency 
+	• Two operation modes: 
+		o Continuous PWM generation 
+		o n-cycles mode 
+	▪ Configurable number of PWM cycles 
+	▪ Trigger Input signal to start generation of n-cycles 
+Consider the following design constraints: 
+	• When the duty cycle is at its minimum value (0%) the PWM output should always stay low. 
+	• When the duty cycle is at its maximum value (100%) the Output should be always high. 
+	• When in n-cycles mode, the PWM output should stay low after all cycles were generated. 
+	• The inputs and outputs should be according to the table below.
