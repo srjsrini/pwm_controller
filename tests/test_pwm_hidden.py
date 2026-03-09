@@ -100,6 +100,8 @@ def test_pwm_advanced_runner():
     
     sources = [
         proj_path / "sources" / "pwm_gen.sv",
+        proj_path / "sources" / "output_controller.sv",
+        proj_path / "sources" / "generator.sv",
     ]
     
     runner = get_runner(sim)
