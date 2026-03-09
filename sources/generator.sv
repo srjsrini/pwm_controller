@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module generator(
     input [15:0] t_on, 
     input [15:0] period, 
