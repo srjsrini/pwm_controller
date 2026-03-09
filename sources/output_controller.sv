@@ -1,4 +1,4 @@
-
+`timescale 1ns / 1ps
 module output_controller(
     input [7:0] n,
     input trig,

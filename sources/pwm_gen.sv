@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module pwm_module(
     input [15:0] i_duty,        // duty cycle
