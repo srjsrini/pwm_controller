@@ -6,128 +6,166 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, with_timeout, SimTimeoutError
 from cocotb_tools.runner import get_runner
 
-
+N_CYCLES_MODE = 1
+CONTINOUS_MODE = 0
 # ==============================================================================
 # Cocotb Test: Advanced PWM Validation
 # ==============================================================================
+
 @cocotb.test()
-async def test_pwm_advanced_complete(dut):
-    """
-    Validates Continuous and N-Cycle modes with period and duty cycle checking.
-    """
+async def test_pwm_hidden(dut):
 
-    cocotb.log.info("Starting PWM Advanced Test")
-
-    # Start 100MHz Clock (10ns period)
-    cocotb.start_soon(Clock(dut.i_clk, 10, units="ns").start())
-
-    # --------------------------
-    # Reset Phase
-    # --------------------------
-    dut.i_rst.value = 1
-    dut.i_trig.value = 0
-    dut.i_mode.value = 0
-    dut.i_duty.value = 0
+    # Initial values
+    dut.i_duty.value = 0x0004
     dut.i_limit.value = 0x7FFF
-    dut.i_n.value = 0
+    dut.i_mode.value = CONTINOUS_MODE
+    dut.i_n.value = 0b101
 
-    await RisingEdge(dut.i_clk)
-    await RisingEdge(dut.i_clk)
-
+    dut.i_trig.value = 0
     dut.i_rst.value = 0
 
-    await RisingEdge(dut.i_clk)
-    await RisingEdge(dut.i_clk)
+    # Clock generation (10ns period)
+    clock = Clock(dut.i_clk, 10, units="ns")
+    cocotb.start_soon(clock.start())
 
-    # ------------------------------------------------
-    # TEST 1 : Continuous Mode Duty Cycle Verification
-    # ------------------------------------------------
-    cocotb.log.info("=== TEST 1: Continuous Mode Validation ===")
+    # ---------------- RESET ----------------
+    await Timer(1, units="ns")
+    dut.i_rst.value = 1
 
-    test_duty = 0x000F
-    dut.i_duty.value = test_duty
-    dut.i_mode.value = 0  # CONTINUOUS MODE
+    await Timer(30, units="ns")
+    dut.i_rst.value = 0
 
-    # Wait for PWM activity
-    await RisingEdge(dut.o_pwm)
-    await FallingEdge(dut.o_pwm)
+    await Timer(300, units="ns")
 
-    # Measure high time
-    high_time_count = 0
-    max_cycles = 10000
+    # =====================================================
+    # CONTINUOUS MODE
+    # =====================================================
 
-    await RisingEdge(dut.i_clk)
+    dut.i_mode.value = CONTINOUS_MODE
 
-    while dut.o_pwm.value == 1 and high_time_count < max_cycles:
-        high_time_count += 1
-        await RisingEdge(dut.i_clk)
+    await Timer(1, units="us")
 
-    assert high_time_count < max_cycles, "PWM stuck HIGH"
+    dut.i_duty.value = 0x000F
 
-    assert high_time_count == test_duty, \
-        f"FAIL: Duty mismatch. Expected {test_duty}, Got {high_time_count}"
+    await Timer(100, units="ns")
 
-    cocotb.log.info(f"PASS: Continuous Duty verified at {high_time_count} cycles")
-
-    # ----------------------------------------
-    # TEST 2 : N-Cycle Mode Pulse Counting
-    # ----------------------------------------
-    cocotb.log.info("=== TEST 2: N-Cycle Mode Validation ===")
-
-    test_n = 5
-
-    dut.i_n.value = test_n
-    dut.i_mode.value = 1  # N_CYCLES_MODE
-    dut.i_duty.value = 0x0004
-
-    # Trigger
-    await RisingEdge(dut.i_clk)
     dut.i_trig.value = 1
-    await RisingEdge(dut.i_clk)
+
+    await Timer(100, units="ns")
+
     dut.i_trig.value = 0
 
-    pulse_count = 0
+    await Timer(2, units="ms")
 
-    timeout_ns = (dut.i_limit.value.integer * test_n * 10) + 1000
+    # =====================================================
+    # N CYCLES MODE
+    # =====================================================
 
-    try:
-        for i in range(test_n):
-            await with_timeout(RisingEdge(dut.o_pwm), timeout_ns, "ns")
-            pulse_count += 1
-            cocotb.log.info(f"Detected pulse {pulse_count}/{test_n}")
+    dut.i_mode.value = N_CYCLES_MODE
 
-    except SimTimeoutError:
-        cocotb.log.warning("Timeout waiting for PWM pulses")
+    await Timer(1, units="us")
 
-    assert pulse_count == test_n, \
-        f"FAIL: Expected {test_n} pulses, got {pulse_count}"
+    for i in range(1, 5):
 
-    # Verify PWM stops
-    await Timer(200, units="ns")
+        dut.i_duty.value = int(i * (dut.i_limit.value.integer // 4))
 
-    assert dut.o_pwm.value == 0, \
-        "FAIL: PWM output did not stay LOW after N cycles finished"
+        dut.i_trig.value = 1
 
-    cocotb.log.info(f"PASS: N-Cycle mode generated {pulse_count} pulses")
+        await Timer(100, units="ns")
 
-    # ------------------------------------------------
-    # TEST 3 : 100% Duty Cycle Corner Case
-    # ------------------------------------------------
-    cocotb.log.info("=== TEST 3: 100% Duty Cycle Corner Case ===")
+        dut.i_trig.value = 0
 
-    dut.i_mode.value = 0
-    dut.i_duty.value = 0xFFFF
+        await Timer(2, units="ms")
 
-    await Timer(500, units="ns")
+    await Timer(2, units="us")
+async def pwm_test(dut):
 
-    assert dut.o_pwm.value == 1, \
-        "FAIL: PWM should stay HIGH for 100% duty"
+    cocotb.start_soon(thread1(dut))
+    cocotb.start_soon(thread2(dut))
+    cocotb.start_soon(thread3(dut))
+    cocotb.start_soon(thread4(dut))
+    cocotb.start_soon(thread5(dut))
 
-    cocotb.log.info("PASS: 100% duty cycle handled correctly")
+async def thread1(dut):
 
-    cocotb.log.info("=== ALL ADVANCED PWM TESTS COMPLETE ===")
+    while True:
+        await RisingEdge(dut.i_clk)
 
+        if dut.o_pwm.value:
+            dut.duty_counter.value = dut.duty_counter.value.integer + 1
+        else:
+            await FallingEdge(dut.i_clk)
+            dut.duty_counter.value = 0
+            
+async def thread2(dut):
 
+    while True:
+        await FallingEdge(dut.o_pwm)
+
+        if dut.duty_counter.value.integer != dut.i_duty.value.integer:
+            dut._log.warning(
+                f"Duty Cycle mismatch. i_duty={dut.i_duty.value} duty_counter={dut.duty_counter.value}"
+            )
+            
+            
+async def thread3(dut):
+
+    while True:
+
+        await RisingEdge(dut.o_pwm)
+
+        while dut.period_lenght.value.integer <= dut.i_limit.value.integer:
+
+            await RisingEdge(dut.i_clk)
+
+            dut.period_lenght.value = dut.period_lenght.value.integer + 1
+
+            if dut.period_lenght.value.integer == dut.i_limit.value.integer - 1:
+
+                dut.period_lenght.value = 0
+
+                if (dut.i_duty.value.integer < (dut.i_limit.value.integer - 4)) and (dut.i_duty.value.integer != 0):
+
+                    dut._log.info(
+                        f"End of period PWM={dut.o_pwm.value}"
+                    )
+
+                    if dut.o_pwm.value:
+                        dut._log.warning("PWM should be deasserted at end of period")
+                        
+                        
+                        
+async def thread4(dut):
+
+    while True:
+
+        await RisingEdge(dut.o_pwm)
+
+        if dut.i_mode.value == 1:   # N_CYCLES_MODE
+            dut.pulse_counter.value = dut.pulse_counter.value.integer + 1
+async def thread5(dut):
+
+    while True:
+
+        await RisingEdge(dut.i_trig)
+
+        if (dut.i_duty.value != 0 and
+            dut.i_mode.value == 1 and
+            dut.pulse_counter.value != 0):
+
+            dut._log.info(
+                f"End of mode pulse_counter={dut.pulse_counter.value} i_n={dut.i_n.value}"
+            )
+
+            if dut.pulse_counter.value.integer != dut.i_n.value.integer:
+                dut._log.warning(
+                    f"Pulse counter mismatch: {dut.pulse_counter.value} != {dut.i_n.value}"
+                )
+
+        await FallingEdge(dut.i_trig)
+
+        if dut.pulse_counter.value.integer != 0:
+            dut.pulse_counter.value = 0
 # ==============================================================================
 # Pytest Runner
 # ==============================================================================

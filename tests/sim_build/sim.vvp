@@ -1,0 +1,44 @@
+#! /usr/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/system.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_sys.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_textio.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2005_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/va_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2009.vpi";
+S_0x57e117cc1c30 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_0x57e117cc1dc0 .scope module, "pwm_module" "pwm_module" 3 3;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 16 "i_duty";
+    .port_info 1 /INPUT 16 "i_limit";
+    .port_info 2 /INPUT 8 "i_n";
+    .port_info 3 /INPUT 1 "i_trig";
+    .port_info 4 /INPUT 1 "i_mode";
+    .port_info 5 /INPUT 1 "i_clk";
+    .port_info 6 /INPUT 1 "i_rst";
+    .port_info 7 /OUTPUT 1 "o_pwm";
+o0x76f818892018 .functor BUFZ 1, C4<z>; HiZ drive
+v0x57e117c98360_0 .net "i_clk", 0 0, o0x76f818892018;  0 drivers
+o0x76f818892048 .functor BUFZ 16, C4<zzzzzzzzzzzzzzzz>; HiZ drive
+v0x57e117c98d50_0 .net "i_duty", 15 0, o0x76f818892048;  0 drivers
+o0x76f818892078 .functor BUFZ 16, C4<zzzzzzzzzzzzzzzz>; HiZ drive
+v0x57e117c99430_0 .net "i_limit", 15 0, o0x76f818892078;  0 drivers
+o0x76f8188920a8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x57e117cd1f80_0 .net "i_mode", 0 0, o0x76f8188920a8;  0 drivers
+o0x76f8188920d8 .functor BUFZ 8, C4<zzzzzzzz>; HiZ drive
+v0x57e117cd2040_0 .net "i_n", 7 0, o0x76f8188920d8;  0 drivers
+o0x76f818892108 .functor BUFZ 1, C4<z>; HiZ drive
+v0x57e117cd2170_0 .net "i_rst", 0 0, o0x76f818892108;  0 drivers
+o0x76f818892138 .functor BUFZ 1, C4<z>; HiZ drive
+v0x57e117cd2230_0 .net "i_trig", 0 0, o0x76f818892138;  0 drivers
+o0x76f818892168 .functor BUFZ 1, C4<z>; HiZ drive
+v0x57e117cd22f0_0 .net "o_pwm", 0 0, o0x76f818892168;  0 drivers
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "-";
+    "/home/suraj/pwm_generator/sources/pwm_gen.sv";
